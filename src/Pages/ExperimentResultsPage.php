@@ -20,12 +20,14 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
-use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Throwable;
 use UnitEnum;
 
+/**
+ * @property-read Schema $form
+ */
 final class ExperimentResultsPage extends Page implements HasForms
 {
     use FormatsMoney {
@@ -45,7 +47,6 @@ final class ExperimentResultsPage extends Page implements HasForms
 
     protected static ?string $slug = 'growth/results';
 
-    /** @var view-string */
     protected string $view = 'filament-growth::pages.experiment-results';
 
     public static function getNavigationGroup(): string | UnitEnum | null
@@ -53,7 +54,7 @@ final class ExperimentResultsPage extends Page implements HasForms
         return config('filament-growth.navigation_group', 'Growth');
     }
 
-    public static function getNavigationSort(): ?int
+    public static function getNavigationSort(): int
     {
         return (int) config('filament-growth.resources.navigation_sort.results', 11);
     }
@@ -90,7 +91,7 @@ final class ExperimentResultsPage extends Page implements HasForms
         $this->loadResults();
     }
 
-    public function getTitle(): string | Htmlable
+    public function getTitle(): string
     {
         return 'Experiment Results';
     }
@@ -130,10 +131,6 @@ final class ExperimentResultsPage extends Page implements HasForms
         }
 
         $this->experimentId = $requestedExperimentId;
-
-        if ($this->experimentId === null) {
-            return;
-        }
 
         if (! app(AccessibleGrowthRecords::class)->findExperiment($this->experimentId) instanceof Experiment) {
             $this->experimentId = null;
@@ -368,7 +365,14 @@ final class ExperimentResultsPage extends Page implements HasForms
             return null;
         }
 
-        $winner = collect($results['variants'] ?? [])->firstWhere('variant_id', $winnerVariantId);
+        $variants = $results['variants'] ?? [];
+
+        if (! is_array($variants)) {
+            $variants = [];
+        }
+
+        /** @var list<array<string, mixed>> $variants */
+        $winner = collect($variants)->firstWhere('variant_id', $winnerVariantId);
 
         if (! is_array($winner)) {
             return null;

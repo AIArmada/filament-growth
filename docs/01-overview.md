@@ -4,6 +4,39 @@ title: Overview
 
 # Filament Growth
 
+## Purpose
+
+The `aiarmada/filament-growth` package is the Filament admin adapter for `aiarmada/growth`.
+
+## What this package owns
+
+- Filament resources for experiments and variants
+- Growth dashboard, experiment results page, and summary widgets
+- Filament-facing policy-gated admin workflows for experimentation management
+
+## What this package does not own
+
+- Experiment assignment, Signals enrichment, or metrics aggregation rules; those stay in `aiarmada/growth`
+- Signals event storage and tracked-property ownership
+- Tenant resolution itself; it consumes owner context from the host app and `commerce-support`
+
+## Related packages
+
+- [`aiarmada/growth`](../../growth/docs/01-overview.md) — core experimentation engine
+- [`aiarmada/signals`](../../signals/docs/01-overview.md) — tracked properties and event attribution
+- [`aiarmada/commerce-support`](../../commerce-support/docs/04-multi-tenancy.md) — owner resolution and scoping primitives
+
+## Main models services or surfaces
+
+- **Resources** — `ExperimentResource`, `VariantResource`
+- **Pages** — `GrowthDashboard`, `ExperimentResultsPage`
+- **Widgets** — `GrowthStatsWidget`, `ExperimentWinnersWidget`
+
+## Owner scoping and security notes
+
+- The plugin should mirror the owner-scoping behavior defined by `aiarmada/growth`
+- Dashboard and results filters are not authorization; the backing growth package remains responsible for safe reads and writes inside the current owner scope
+
 `aiarmada/filament-growth` provides a Filament v5 admin UI for the `aiarmada/growth` experimentation engine. It adds owner-scoped resources, a dashboard, a results page, and summary widgets so operators can manage experiments and inspect performance without building a custom back office first.
 
 ## What the package adds
@@ -46,3 +79,11 @@ title: Overview
 - Review [configuration](./03-configuration.md)
 - Walk through [usage](./04-usage.md)
 - Keep [troubleshooting](./99-troubleshooting.md) handy for owner-scope and navigation issues
+
+## Read next
+
+- [Installation](02-installation.md)
+- [Configuration](03-configuration.md)
+- [Usage](04-usage.md)
+- [Troubleshooting](99-troubleshooting.md)
+- [Core growth overview](../../growth/docs/01-overview.md)

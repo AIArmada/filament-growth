@@ -25,7 +25,7 @@ final class ExperimentWinnersWidget extends Widget
 
     protected int | string | array $columnSpan = 'full';
 
-    /** @var view-string */
+    /** @phpstan-ignore-next-line property.defaultValue */
     protected string $view = 'filament-growth::widgets.experiment-winners';
 
     public static function canView(): bool
@@ -54,7 +54,14 @@ final class ExperimentWinnersWidget extends Widget
                     return null;
                 }
 
-                $winnerVariant = collect($metrics['variants'] ?? [])->firstWhere('variant_id', $metrics['winner_variant_id'] ?? null);
+                $variants = $metrics['variants'] ?? [];
+
+                if (! is_array($variants)) {
+                    $variants = [];
+                }
+
+                /** @var list<array<string, mixed>> $variants */
+                $winnerVariant = collect($variants)->firstWhere('variant_id', $metrics['winner_variant_id'] ?? null);
 
                 return [
                     'name' => (string) $experiment->name,

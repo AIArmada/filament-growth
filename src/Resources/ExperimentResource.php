@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AIArmada\FilamentGrowth\Resources;
 
 use AIArmada\CommerceSupport\Support\OwnerContext;
+use AIArmada\CommerceSupport\Support\OwnerScope;
 use AIArmada\CommerceSupport\Support\OwnerScopeKey;
 use AIArmada\CommerceSupport\Support\OwnerTuple\OwnerTupleColumns;
 use AIArmada\FilamentGrowth\Pages\ExperimentResultsPage;
@@ -18,6 +19,7 @@ use AIArmada\Growth\Models\Experiment;
 use AIArmada\Growth\Models\Variant;
 use AIArmada\Signals\Models\TrackedProperty;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
@@ -250,7 +252,7 @@ final class ExperimentResource extends Resource
             ])
             ->actions(array_values(array_filter([
                 config('filament-growth.features.results', true)
-                    ? Tables\Actions\Action::make('results')
+                    ? Action::make('results')
                         ->label('Results')
                         ->icon('heroicon-o-chart-bar')
                         ->visible(fn (): bool => ExperimentResultsPage::canAccess())
@@ -340,11 +342,11 @@ final class ExperimentResource extends Resource
         $childQuery = $childModelClass::query();
 
         if (method_exists($childModelClass, 'scopeWithoutOwnerScope')) {
-            /** @phpstan-ignore-next-line dynamic Eloquent scope */
-            $childQuery = $childQuery->withoutOwnerScope();
+            /** @var Builder<TChildModel> $childQuery */
+            $childQuery = $childQuery->withoutGlobalScope(OwnerScope::class);
         }
 
-        return $childQuery
+        $childQuery = $childQuery
             ->selectRaw('count(*)')
             ->whereColumn($childTable . '.experiment_id', $experimentTable . '.id')
             ->where(function (Builder $query) use ($childOwnerColumns, $childTable, $experimentOwnerColumns, $experimentTable): void {
@@ -368,6 +370,9 @@ final class ExperimentResource extends Resource
                             ->whereNull($experimentTable . '.' . $experimentOwnerColumns->ownerIdColumn);
                     });
             });
+
+        /** @var Builder<TChildModel> $childQuery */
+        return $childQuery;
     }
 
     private static function ownerScopeKey(): string
@@ -451,10 +456,7 @@ final class ExperimentResource extends Resource
         /** @var Builder<TrackedProperty> $trackedPropertyQuery */
         $trackedPropertyQuery = TrackedProperty::query();
 
-        if (method_exists(TrackedProperty::class, 'scopeWithoutOwnerScope')) {
-            /** @phpstan-ignore-next-line dynamic Eloquent scope */
-            $trackedPropertyQuery = $trackedPropertyQuery->withoutOwnerScope();
-        }
+        $trackedPropertyQuery = $trackedPropertyQuery->withoutGlobalScope(OwnerScope::class);
 
         $trackedPropertyQuery = $trackedPropertyQuery
             ->selectRaw('1')

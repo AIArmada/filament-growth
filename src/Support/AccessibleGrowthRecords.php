@@ -6,6 +6,7 @@ namespace AIArmada\FilamentGrowth\Support;
 
 use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
 use AIArmada\CommerceSupport\Support\OwnerContext;
+use AIArmada\CommerceSupport\Support\OwnerScope;
 use AIArmada\CommerceSupport\Support\OwnerTuple\OwnerTupleColumns;
 use AIArmada\Growth\Actions\ScopeSignalQueryToOwner;
 use AIArmada\Growth\Models\Assignment;
@@ -336,10 +337,7 @@ final class AccessibleGrowthRecords
         /** @var Builder<TrackedProperty> $trackedPropertyQuery */
         $trackedPropertyQuery = TrackedProperty::query();
 
-        if (method_exists(TrackedProperty::class, 'scopeWithoutOwnerScope')) {
-            /** @phpstan-ignore-next-line dynamic Eloquent scope */
-            $trackedPropertyQuery = $trackedPropertyQuery->withoutOwnerScope();
-        }
+        $trackedPropertyQuery = $trackedPropertyQuery->withoutGlobalScope(OwnerScope::class);
 
         return $query->whereExists(
             $trackedPropertyQuery
