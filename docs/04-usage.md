@@ -21,7 +21,7 @@ public function panel(Panel $panel): Panel
 
 ## Manage experiments
 
-`ExperimentResource` gives you CRUD screens for experiments with owner-safe queries, tracked property selection, relation counts, and gated mutation checks.
+`ExperimentResource` gives you CRUD screens for experiments with owner-safe queries, tracked-property consistency checks, relation counts, and gated mutation checks.
 
 ### Experiment form highlights
 
@@ -35,6 +35,8 @@ public function panel(Panel $panel): Panel
 - `description`
 
 When `growth.features.preset_modules.enabled` is enabled, changing the module type pre-fills goal and settings fields using `ResolveExperimentPreset`.
+
+The tracked-property selector only shows writable Signals properties that are visible in the current owner scope and consistent with the experiment's owner tuple.
 
 ### Module settings UI
 
@@ -87,6 +89,7 @@ Bulk deletes follow the same safety rule as experiments: all selected rows must 
 - pending state when `winner_variant_id` is `null`
 - per-variant comparison chart
 - full variant breakdown table
+- support for `?experiment=<id>` deep links from resource actions and widgets
 
 The page reads from `AggregateExperimentMetrics`, so it stays aligned with the same winner and attribution rules used by the domain package.
 
@@ -122,6 +125,8 @@ Tracked revenue and winner-ready summaries are aggregated from the most recently
 
 Each row links back to the results page when available.
 
+The link preselects the experiment on the results page via the `experiment` query-string parameter.
+
 If aggregation fails for a visible experiment, that row is skipped instead of breaking the widget.
 
 ## Owner scoping expectations
@@ -132,7 +137,10 @@ That means:
 
 - tracked properties must belong to the current owner scope
 - experiments must belong to the current owner scope
+- tracked-property ownership must remain consistent with the experiment owner tuple
 - result pages only load experiments the current owner can access
 - dashboard pages and widgets require an authenticated user who can `viewAny` experiments
+
+If an experiment and its tracked property no longer line up, `AccessibleGrowthRecords` intentionally hides that record from the Filament layer.
 
 For multi-tenant applications, make sure your owner resolver is configured through [`commerce-support`](../../commerce-support/docs/04-multi-tenancy.md).

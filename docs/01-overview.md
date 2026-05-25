@@ -13,6 +13,7 @@ The `aiarmada/filament-growth` package is the Filament admin adapter for `aiarma
 - Filament resources for experiments and variants
 - Growth dashboard, experiment results page, and summary widgets
 - Filament-facing policy-gated admin workflows for experimentation management
+- Owner-safe read paths that only surface experiments with consistent tracked-property access
 
 ## What this package does not own
 
@@ -57,9 +58,10 @@ The `aiarmada/filament-growth` package is the Filament admin adapter for `aiarma
 - Policy-gated resources, pages, and widgets backed by `ExperimentPolicy` and `VariantPolicy`
 - Preset-aware experiment forms powered by `ResolveExperimentPreset`
 - Module-aware variant settings based on the selected experiment type
-- Results page backed by `AggregateExperimentMetrics`
+- Results page backed by `AggregateExperimentMetrics` with deep links to a selected experiment
 - Dashboard widgets that handle mixed-currency revenue summaries and pending winner states
 - Fail-soft reporting surfaces that render empty or partial states when aggregation throws
+- Accessible-record guards that hide inconsistent experiment / tracked-property combinations instead of leaking cross-owner data
 
 ## Requirements
 

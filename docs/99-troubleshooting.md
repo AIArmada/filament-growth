@@ -38,6 +38,7 @@ title: Troubleshooting
 
 - verify the current owner is resolved correctly
 - ensure the tracked property belongs to the same owner as the experiment flow
+- confirm the tracked property's owner tuple still matches the experiment owner tuple
 - confirm the underlying Growth and Signals records exist for that owner
 
 ## The results page shows no winner yet
@@ -66,9 +67,9 @@ Remember that the widget only aggregates revenue and winner-ready summaries from
 
 ## Results links open, but no experiment data loads
 
-**Cause:** The requested experiment is outside the current owner scope or was deleted.
+**Cause:** The requested experiment is outside the current owner scope, was deleted, or no longer has a tracked property that is readable in the same owner scope.
 
-**Fix:** Open the page from the current experiment list, or resolve the owner context before trying again.
+**Fix:** Open the page from the current experiment list, resolve the owner context before trying again, and verify the linked tracked property still belongs to the same owner scope as the experiment.
 
 ## More help
 
