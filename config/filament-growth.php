@@ -18,6 +18,7 @@ return [
         'widgets' => true,
         'experiments' => true,
         'variants' => true,
+        'settings_page' => true,
     ],
 
     /* Resources */
@@ -27,6 +28,7 @@ return [
             'results' => 11,
             'experiments' => 20,
             'variants' => 21,
+            'settings' => 99,
         ],
     ],
 ];

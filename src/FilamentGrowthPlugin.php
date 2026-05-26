@@ -6,6 +6,7 @@ namespace AIArmada\FilamentGrowth;
 
 use AIArmada\FilamentGrowth\Pages\ExperimentResultsPage;
 use AIArmada\FilamentGrowth\Pages\GrowthDashboard;
+use AIArmada\FilamentGrowth\Pages\ManageGrowthSettings;
 use AIArmada\FilamentGrowth\Resources\ExperimentResource;
 use AIArmada\FilamentGrowth\Resources\VariantResource;
 use Filament\Contracts\Plugin;
@@ -42,6 +43,10 @@ final class FilamentGrowthPlugin implements Plugin
 
         if (config('filament-growth.features.results', true)) {
             $pages[] = ExperimentResultsPage::class;
+        }
+
+        if (config('filament-growth.features.settings_page', true)) {
+            $pages[] = ManageGrowthSettings::class;
         }
 
         if (config('filament-growth.features.experiments', true)) {
