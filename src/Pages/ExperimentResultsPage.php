@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace AIArmada\FilamentGrowth\Pages;
 
+use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
 use AIArmada\CommerceSupport\Traits\FormatsMoney;
 use AIArmada\FilamentGrowth\Resources\ExperimentResource;
-use AIArmada\FilamentGrowth\Support\AccessibleGrowthRecords;
 use AIArmada\Growth\Actions\AggregateExperimentMetrics;
 use AIArmada\Growth\Enums\ExperimentModuleType;
 use AIArmada\Growth\Models\Experiment;
@@ -132,7 +132,7 @@ final class ExperimentResultsPage extends Page implements HasForms
 
         $this->experimentId = $requestedExperimentId;
 
-        if (! app(AccessibleGrowthRecords::class)->findExperiment($this->experimentId) instanceof Experiment) {
+        if (! Experiment::query()->whereKey($this->experimentId)->exists()) {
             $this->experimentId = null;
         }
     }
@@ -146,7 +146,7 @@ final class ExperimentResultsPage extends Page implements HasForms
             return null;
         }
 
-        $experiment = app(AccessibleGrowthRecords::class)->findExperiment($experimentId);
+        $experiment = Experiment::query()->whereKey($experimentId)->first();
 
         if (! $experiment instanceof Experiment) {
             return null;
@@ -260,8 +260,7 @@ final class ExperimentResultsPage extends Page implements HasForms
      */
     private function experimentOptions(): array
     {
-        return app(AccessibleGrowthRecords::class)
-            ->experiments(Experiment::query())
+        return Experiment::query()
             ->orderByDesc('created_at')
             ->get(['id', 'name'])
             ->mapWithKeys(fn (Experiment $experiment): array => [(string) $experiment->getKey() => (string) $experiment->name])
@@ -284,8 +283,7 @@ final class ExperimentResultsPage extends Page implements HasForms
 
     private function defaultExperimentId(): ?string
     {
-        $experimentId = app(AccessibleGrowthRecords::class)
-            ->experiments(Experiment::query())
+        $experimentId = Experiment::query()
             ->orderByDesc('created_at')
             ->value('id');
 
@@ -418,7 +416,18 @@ final class ExperimentResultsPage extends Page implements HasForms
 
     private function findTrackedPropertyForExperiment(Experiment $experiment): ?TrackedProperty
     {
-        return app(AccessibleGrowthRecords::class)->findTrackedPropertyForExperiment($experiment);
+        $query = OwnerUiScope::applyForRecordOwner(
+            TrackedProperty::query(),
+            $experiment,
+            recordConfigKey: 'growth.features.owner',
+            queryConfigKey: 'signals.owner',
+        );
+
+        $trackedProperty = $query
+            ->whereKey($experiment->tracked_property_id)
+            ->first();
+
+        return $trackedProperty instanceof TrackedProperty ? $trackedProperty : null;
     }
 
     /**

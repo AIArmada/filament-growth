@@ -6,7 +6,6 @@ namespace AIArmada\FilamentGrowth\Widgets;
 
 use AIArmada\CommerceSupport\Traits\FormatsMoney;
 use AIArmada\FilamentGrowth\Pages\ExperimentResultsPage;
-use AIArmada\FilamentGrowth\Support\AccessibleGrowthRecords;
 use AIArmada\Growth\Actions\AggregateExperimentMetrics;
 use AIArmada\Growth\Enums\ExperimentModuleType;
 use AIArmada\Growth\Models\Experiment;
@@ -42,8 +41,7 @@ final class ExperimentWinnersWidget extends Widget
      */
     public function getExperimentSnapshots(): array
     {
-        return app(AccessibleGrowthRecords::class)
-            ->experiments(Experiment::query())
+        return Experiment::query()
             ->orderByDesc('updated_at')
             ->limit(5)
             ->get()
