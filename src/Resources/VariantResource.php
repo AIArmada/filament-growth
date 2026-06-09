@@ -10,6 +10,7 @@ use AIArmada\FilamentGrowth\Resources\VariantResource\Schemas\VariantForm;
 use AIArmada\FilamentGrowth\Resources\VariantResource\Tables\VariantsTable;
 use AIArmada\FilamentGrowth\Support\ExperimentHelpers;
 use AIArmada\Growth\Enums\ExperimentModuleType;
+use AIArmada\Growth\Models\Experiment;
 use AIArmada\Growth\Models\Variant;
 use BackedEnum;
 use Filament\Resources\Resource;
