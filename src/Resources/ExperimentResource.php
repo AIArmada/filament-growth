@@ -38,16 +38,17 @@ final class ExperimentResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        return ExperimentHelpers::applyOwnerSafeRelationCounts(Experiment::query())
-            ->with([
-                'trackedProperty' => function ($query) {
-                    $builder = $query instanceof Relation ? $query->getQuery() : $query;
+        return ExperimentHelpers::applyOwnerSafeRelationCounts(
+            OwnerUiScope::apply(Experiment::query()),
+        )->with([
+            'trackedProperty' => function ($query) {
+                $builder = $query instanceof Relation ? $query->getQuery() : $query;
 
-                    /** @var Builder<TrackedProperty> $builder */
-                    return OwnerUiScope::apply($builder)
-                        ->select(['id', 'name']);
-                },
-            ]);
+                /** @var Builder<TrackedProperty> $builder */
+                return OwnerUiScope::apply($builder)
+                    ->select(['id', 'name']);
+            },
+        ]);
     }
 
     public static function getNavigationGroup(): string | UnitEnum | null
@@ -78,16 +79,30 @@ final class ExperimentResource extends Resource
 
     public static function canEdit(Model $record): bool
     {
-        return $record instanceof Experiment
-            && parent::canEdit($record)
-            && OwnerUiScope::canMutateRecord($record);
+        if (! $record instanceof Experiment) {
+            return false;
+        }
+
+        if (! parent::canEdit($record)) {
+            return false;
+        }
+
+        return OwnerUiScope::canMutateRecord($record)
+            || ExperimentHelpers::canMutateViaTrackedProperty($record);
     }
 
     public static function canDelete(Model $record): bool
     {
-        return $record instanceof Experiment
-            && parent::canDelete($record)
-            && OwnerUiScope::canMutateRecord($record);
+        if (! $record instanceof Experiment) {
+            return false;
+        }
+
+        if (! parent::canDelete($record)) {
+            return false;
+        }
+
+        return OwnerUiScope::canMutateRecord($record)
+            || ExperimentHelpers::canMutateViaTrackedProperty($record);
     }
 
     public static function canDeleteAny(): bool

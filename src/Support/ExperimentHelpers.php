@@ -107,4 +107,15 @@ final class ExperimentHelpers
     {
         return true;
     }
+
+    public static function canMutateViaTrackedProperty(Experiment $experiment): bool
+    {
+        if (! TrackedProperty::ownerScopeConfig()->enabled) {
+            return false;
+        }
+
+        return OwnerUiScope::apply(TrackedProperty::query(), includeGlobal: false)
+            ->whereKey($experiment->tracked_property_id)
+            ->exists();
+    }
 }

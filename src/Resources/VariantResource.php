@@ -8,6 +8,7 @@ use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
 use AIArmada\FilamentGrowth\Resources\VariantResource\Pages;
 use AIArmada\FilamentGrowth\Resources\VariantResource\Schemas\VariantForm;
 use AIArmada\FilamentGrowth\Resources\VariantResource\Tables\VariantsTable;
+use AIArmada\FilamentGrowth\Support\ExperimentHelpers;
 use AIArmada\Growth\Enums\ExperimentModuleType;
 use AIArmada\Growth\Models\Variant;
 use BackedEnum;
@@ -36,7 +37,7 @@ final class VariantResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        return OwnerUiScope::apply(Variant::query(), includeGlobal: false)
+        return OwnerUiScope::apply(Variant::query())
             ->with(['experiment:id,name']);
     }
 
@@ -67,16 +68,40 @@ final class VariantResource extends Resource
 
     public static function canEdit(Model $record): bool
     {
-        return $record instanceof Variant
-            && parent::canEdit($record)
-            && OwnerUiScope::canMutateRecord($record);
+        if (! $record instanceof Variant) {
+            return false;
+        }
+
+        if (! parent::canEdit($record)) {
+            return false;
+        }
+
+        if (OwnerUiScope::canMutateRecord($record)) {
+            return true;
+        }
+
+        $experiment = $record->relationLoaded('experiment') ? $record->experiment : Experiment::query()->find($record->experiment_id);
+
+        return $experiment instanceof Experiment && ExperimentHelpers::canMutateViaTrackedProperty($experiment);
     }
 
     public static function canDelete(Model $record): bool
     {
-        return $record instanceof Variant
-            && parent::canDelete($record)
-            && OwnerUiScope::canMutateRecord($record);
+        if (! $record instanceof Variant) {
+            return false;
+        }
+
+        if (! parent::canDelete($record)) {
+            return false;
+        }
+
+        if (OwnerUiScope::canMutateRecord($record)) {
+            return true;
+        }
+
+        $experiment = $record->relationLoaded('experiment') ? $record->experiment : Experiment::query()->find($record->experiment_id);
+
+        return $experiment instanceof Experiment && ExperimentHelpers::canMutateViaTrackedProperty($experiment);
     }
 
     public static function canDeleteAny(): bool
