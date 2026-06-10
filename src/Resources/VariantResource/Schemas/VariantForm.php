@@ -67,8 +67,10 @@ class VariantForm
                     Forms\Components\Toggle::make('is_control')
                         ->default(false),
 
-                    Forms\Components\Toggle::make('is_active')
-                        ->default(true),
+                    Forms\Components\Select::make('status')
+                        ->options(\AIArmada\Growth\Enums\VariantStatus::class)
+                        ->default('active')
+                        ->required(),
 
                     Forms\Components\Textarea::make('description')
                         ->rows(3)

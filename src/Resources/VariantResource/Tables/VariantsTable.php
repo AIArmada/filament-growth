@@ -48,17 +48,18 @@ class VariantsTable
                 Tables\Columns\IconColumn::make('is_control')
                     ->label('Control')
                     ->boolean(),
-                Tables\Columns\IconColumn::make('is_active')
-                    ->label('Active')
-                    ->boolean(),
+                Tables\Columns\TextColumn::make('status')
+                    ->badge()
+                    ->color(fn (\AIArmada\Growth\Enums\VariantStatus $state): string => $state->color()),
                 Tables\Columns\TextColumn::make('position')
                     ->numeric()
                     ->sortable(),
             ])
             ->defaultSort('position')
             ->filters([
-                Tables\Filters\TernaryFilter::make('is_active')
-                    ->label('Active'),
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Status')
+                    ->options(\AIArmada\Growth\Enums\VariantStatus::class),
             ])
             ->actions([
                 EditAction::make()

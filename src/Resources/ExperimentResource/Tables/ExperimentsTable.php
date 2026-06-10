@@ -224,6 +224,7 @@ class ExperimentsTable
             ExperimentStatus::Paused => 'Bypassing middleware',
             ExperimentStatus::Draft => 'Not live',
             ExperimentStatus::Concluded => 'Locked',
+            ExperimentStatus::Archived => 'Archived',
         };
     }
 
