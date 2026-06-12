@@ -51,7 +51,7 @@ final class ExperimentResultsPage extends Page implements HasForms
 
     public static function getNavigationGroup(): string | UnitEnum | null
     {
-        return config('filament-growth.navigation_group', 'Growth');
+        return config('filament-growth.navigation.group', 'Growth');
     }
 
     public static function getNavigationSort(): int

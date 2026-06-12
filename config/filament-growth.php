@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 return [
     /* Navigation */
-    'navigation_group' => 'Growth',
+    'navigation' => [
+        'group' => 'Growth',
+    ],
 
     /* Tables */
     'tables' => [

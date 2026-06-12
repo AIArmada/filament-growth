@@ -27,8 +27,6 @@ final class ExperimentResource extends Resource
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-beaker';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Growth';
-
     protected static ?int $navigationSort = 20;
 
     protected static ?string $recordTitleAttribute = 'name';
@@ -53,7 +51,7 @@ final class ExperimentResource extends Resource
 
     public static function getNavigationGroup(): string | UnitEnum | null
     {
-        return config('filament-growth.navigation_group', 'Growth');
+        return config('filament-growth.navigation.group', 'Growth');
     }
 
     public static function getNavigationSort(): ?int

@@ -34,7 +34,7 @@ final class ManageGrowthSettings extends Page
 
     public static function getNavigationGroup(): string | UnitEnum | null
     {
-        return config('filament-growth.navigation_group', 'Growth');
+        return config('filament-growth.navigation.group', 'Growth');
     }
 
     public static function getNavigationSort(): int
