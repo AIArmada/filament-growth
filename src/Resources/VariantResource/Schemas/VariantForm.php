@@ -8,6 +8,7 @@ use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
 use AIArmada\CommerceSupport\Support\OwnerContext;
 use AIArmada\CommerceSupport\Support\OwnerScopeKey;
 use AIArmada\Growth\Enums\ExperimentModuleType;
+use AIArmada\Growth\Enums\VariantStatus;
 use AIArmada\Growth\Models\Experiment;
 use AIArmada\Growth\Models\Variant;
 use Filament\Forms;
@@ -68,7 +69,7 @@ class VariantForm
                         ->default(false),
 
                     Forms\Components\Select::make('status')
-                        ->options(\AIArmada\Growth\Enums\VariantStatus::class)
+                        ->options(VariantStatus::class)
                         ->default('active')
                         ->required(),
 

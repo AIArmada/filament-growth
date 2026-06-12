@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AIArmada\FilamentGrowth\Resources\VariantResource\Tables;
 
 use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
+use AIArmada\Growth\Enums\VariantStatus;
 use AIArmada\Growth\Models\Experiment;
 use AIArmada\Growth\Models\Variant;
 use Filament\Actions\BulkAction;
@@ -50,7 +51,7 @@ class VariantsTable
                     ->boolean(),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn (\AIArmada\Growth\Enums\VariantStatus $state): string => $state->color()),
+                    ->color(fn (VariantStatus $state): string => $state->color()),
                 Tables\Columns\TextColumn::make('position')
                     ->numeric()
                     ->sortable(),
@@ -59,7 +60,7 @@ class VariantsTable
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Status')
-                    ->options(\AIArmada\Growth\Enums\VariantStatus::class),
+                    ->options(VariantStatus::class),
             ])
             ->actions([
                 EditAction::make()
