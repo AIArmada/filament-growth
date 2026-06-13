@@ -51,7 +51,7 @@ final class ExperimentResource extends Resource
 
     public static function getNavigationGroup(): string | UnitEnum | null
     {
-        return config('filament-growth.navigation.group', 'Growth');
+        return config('filament-growth.navigation.group');
     }
 
     public static function getNavigationSort(): ?int

@@ -23,7 +23,7 @@ final class GrowthDashboard extends Dashboard
 
     public static function getNavigationGroup(): ?string
     {
-        return config('filament-growth.navigation.group', 'Growth');
+        return config('filament-growth.navigation.group');
     }
 
     public static function getNavigationSort(): ?int
