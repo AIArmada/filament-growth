@@ -27,8 +27,6 @@ final class VariantResource extends Resource
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-adjustments-horizontal';
 
-    protected static ?int $navigationSort = 21;
-
     protected static ?string $recordTitleAttribute = 'name';
 
     /**

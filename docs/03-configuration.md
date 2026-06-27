@@ -10,7 +10,9 @@ All package options live in `config/filament-growth.php`.
 
 ```php
 return [
-    'navigation_group' => 'Growth',
+    'navigation' => [
+        'group' => 'Growth'
+    ],
 
     'tables' => [
         'stats_experiment_limit' => 10,
@@ -37,7 +39,7 @@ return [
 
 ## Navigation
 
-### `navigation_group`
+### `navigation.group`
 
 Controls the Filament navigation group used by the dashboard, results page, and resources.
 
@@ -93,7 +95,9 @@ Controls the order of registered navigation items:
 <?php
 
 return [
-    'navigation_group' => 'Optimization',
+    'navigation' => [
+        'group' => 'Growth'
+    ],
 
     'tables' => [
         'stats_experiment_limit' => 5,
