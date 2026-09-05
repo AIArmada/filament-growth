@@ -135,7 +135,7 @@ class VariantForm
             ->first();
 
         if (! $experiment instanceof Experiment) {
-            return $query->whereRaw('1 = 0');
+            return $query->whereKey([]);
         }
 
         return $query->where('experiment_id', $experiment->getKey());

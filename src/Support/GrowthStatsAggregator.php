@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AIArmada\FilamentGrowth\Support;
 
+use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
 use AIArmada\CommerceSupport\Traits\FormatsMoney;
 use AIArmada\Growth\Actions\AggregateExperimentMetrics;
 use AIArmada\Growth\Enums\ExperimentStatus;
@@ -26,14 +27,14 @@ final class GrowthStatsAggregator
     public static function aggregate(): array
     {
         $statsExperimentLimit = (int) config('filament-growth.tables.stats_experiment_limit', 10);
-        $experimentCounts = Experiment::query()
+        $experimentCounts = OwnerUiScope::apply(Experiment::query(), includeGlobal: false)
             ->selectRaw('COUNT(*) as total_experiments')
             ->selectRaw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active_experiments', [ExperimentStatus::Active->value])
             ->first();
         $totalExperiments = (int) ($experimentCounts?->getAttribute('total_experiments') ?? 0);
         $activeExperiments = (int) ($experimentCounts?->getAttribute('active_experiments') ?? 0);
 
-        $experiments = Experiment::query()
+        $experiments = OwnerUiScope::apply(Experiment::query(), includeGlobal: false)
             ->orderByDesc('updated_at')
             ->orderByDesc('created_at')
             ->limit(max(1, $statsExperimentLimit))
@@ -74,8 +75,8 @@ final class GrowthStatsAggregator
         }
 
         $winnersDescription = implode(' • ', $winnersDescriptionParts);
-        $variantCount = Variant::query()->count();
-        $assignmentCount = Assignment::query()->count();
+        $variantCount = OwnerUiScope::apply(Variant::query(), includeGlobal: false)->count();
+        $assignmentCount = OwnerUiScope::apply(Assignment::query(), includeGlobal: false)->count();
 
         return [
             'activeExperiments' => $activeExperiments,
