@@ -11,6 +11,7 @@ use AIArmada\Growth\Enums\ExperimentModuleType;
 use AIArmada\Growth\Enums\VariantStatus;
 use AIArmada\Growth\Models\Experiment;
 use AIArmada\Growth\Models\Variant;
+use AIArmada\Signals\Models\TrackedProperty;
 use Filament\Forms;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -30,7 +31,7 @@ class VariantForm
                         ->relationship(
                             name: 'experiment',
                             titleAttribute: 'name',
-                            modifyQueryUsing: fn (Builder $query): Builder => OwnerUiScope::apply($query, includeGlobal: false),
+                            modifyQueryUsing: fn (Builder $query): Builder => VariantForm::scopeAccessibleExperiments($query),
                         )
                         ->live()
                         ->afterStateUpdated(fn (Get $get, Set $set, mixed $state): mixed => $set('settings', VariantForm::normalizeSettingsForExperiment($state, $get('settings'))))
@@ -130,7 +131,7 @@ class VariantForm
      */
     private static function scopeCodeUniquenessToExperiment(Builder $query, mixed $experimentId): Builder
     {
-        $experiment = OwnerUiScope::apply(Experiment::query(), includeGlobal: false)
+        $experiment = VariantForm::scopeAccessibleExperiments(Experiment::query())
             ->whereKey($experimentId)
             ->first();
 
@@ -156,7 +157,7 @@ class VariantForm
             return is_string($cachedModuleType) ? $cachedModuleType : null;
         }
 
-        $moduleType = OwnerUiScope::apply(Experiment::query(), includeGlobal: false)
+        $moduleType = VariantForm::scopeAccessibleExperiments(Experiment::query())
             ->whereKey($normalizedExperimentId)
             ->value('module_type');
 
@@ -166,6 +167,24 @@ class VariantForm
         );
 
         return is_string($moduleType) ? $moduleType : null;
+    }
+
+    /**
+     * @param  Builder<Experiment>  $query
+     * @return Builder<Experiment>
+     */
+    private static function scopeAccessibleExperiments(Builder $query): Builder
+    {
+        $query = OwnerUiScope::apply($query, includeGlobal: false);
+
+        if (Experiment::ownerScopeConfig()->enabled || ! TrackedProperty::ownerScopeConfig()->enabled) {
+            return $query;
+        }
+
+        return $query->whereIn(
+            'tracked_property_id',
+            OwnerUiScope::apply(TrackedProperty::query(), includeGlobal: false)->select('id'),
+        );
     }
 
     /**
