@@ -59,9 +59,7 @@ class ExperimentsTable
                                 return $record->status === ExperimentStatus::Active;
                             }
 
-                            $record->update([
-                                'status' => $state ? ExperimentStatus::Active->value : ExperimentStatus::Paused->value,
-                            ]);
+                            $record->transitionTo($state ? ExperimentStatus::Active : ExperimentStatus::Paused)->save();
 
                             return $state;
                         }),

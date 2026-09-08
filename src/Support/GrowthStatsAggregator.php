@@ -15,7 +15,7 @@ use Throwable;
 
 final class GrowthStatsAggregator
 {
-    protected ?string $currency = 'MYR';
+    protected ?string $currency = null;
 
     use FormatsMoney {
         formatMoney as private formatMinorMoney;
