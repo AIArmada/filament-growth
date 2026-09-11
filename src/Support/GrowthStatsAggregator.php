@@ -11,6 +11,7 @@ use AIArmada\Growth\Enums\ExperimentStatus;
 use AIArmada\Growth\Models\Assignment;
 use AIArmada\Growth\Models\Experiment;
 use AIArmada\Growth\Models\Variant;
+use Illuminate\Support\Collection;
 use Throwable;
 
 final class GrowthStatsAggregator
@@ -27,21 +28,31 @@ final class GrowthStatsAggregator
     public static function aggregate(): array
     {
         $statsExperimentLimit = (int) config('filament-growth.tables.stats_experiment_limit', 10);
-        $experimentCounts = OwnerUiScope::apply(Experiment::query(), includeGlobal: false)
-            ->selectRaw('COUNT(*) as total_experiments')
-            ->selectRaw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as active_experiments', [ExperimentStatus::Active->value])
-            ->first();
-        $totalExperiments = (int) ($experimentCounts?->getAttribute('total_experiments') ?? 0);
-        $activeExperiments = (int) ($experimentCounts?->getAttribute('active_experiments') ?? 0);
-
-        $experiments = OwnerUiScope::apply(Experiment::query(), includeGlobal: false)
+        $variantCountQuery = OwnerUiScope::apply(Variant::query(), includeGlobal: false)
+            ->selectRaw('COUNT(*)');
+        $assignmentCountQuery = OwnerUiScope::apply(Assignment::query(), includeGlobal: false)
+            ->selectRaw('COUNT(*)');
+        $experiments = OwnerUiScope::apply(Experiment::query()->with('trackedProperty'), includeGlobal: false)
+            ->selectRaw('COUNT(*) OVER () as total_experiments')
+            ->selectRaw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) OVER () as active_experiments', [ExperimentStatus::Active->value])
+            ->selectSub($variantCountQuery, 'total_variant_count')
+            ->selectSub($assignmentCountQuery, 'total_assignment_count')
+            ->addSelect(['id', 'tracked_property_id', 'owner_type', 'owner_id', 'name', 'module_type', 'status', 'goal_event_name', 'winner_metric', 'created_at', 'updated_at'])
             ->orderByDesc('updated_at')
             ->orderByDesc('created_at')
             ->limit(max(1, $statsExperimentLimit))
-            ->get(['id', 'tracked_property_id', 'owner_type', 'owner_id', 'name', 'module_type', 'status', 'goal_event_name', 'winner_metric', 'created_at', 'updated_at']);
+            ->get();
 
-        $summary = $experiments->reduce(function (array $carry, Experiment $experiment): array {
-            $metrics = self::safeAggregateExperimentMetrics($experiment);
+        $totalExperiments = (int) ($experiments->first()?->getAttribute('total_experiments') ?? 0);
+        $activeExperiments = (int) ($experiments->first()?->getAttribute('active_experiments') ?? 0);
+        $aggregator = app(AggregateExperimentMetrics::class);
+        $batch = method_exists($aggregator, 'handleMany')
+            ? self::safeAggregateExperimentMetricsBatch($aggregator, $experiments)
+            : null;
+        $metricsByExperiment = $batch['results'] ?? [];
+
+        $summary = $experiments->reduce(function (array $carry, Experiment $experiment) use ($metricsByExperiment): array {
+            $metrics = $metricsByExperiment[(string) $experiment->getKey()] ?? self::safeAggregateExperimentMetrics($experiment);
 
             if ($metrics === null) {
                 return $carry;
@@ -75,8 +86,9 @@ final class GrowthStatsAggregator
         }
 
         $winnersDescription = implode(' • ', $winnersDescriptionParts);
-        $variantCount = OwnerUiScope::apply(Variant::query(), includeGlobal: false)->count();
-        $assignmentCount = OwnerUiScope::apply(Assignment::query(), includeGlobal: false)->count();
+        $firstExperiment = $experiments->first();
+        $variantCount = (int) ($firstExperiment?->getAttribute('total_variant_count') ?? $batch['variant_count'] ?? 0);
+        $assignmentCount = (int) ($firstExperiment?->getAttribute('total_assignment_count') ?? $batch['assignment_count'] ?? 0);
 
         return [
             'activeExperiments' => $activeExperiments,
@@ -94,6 +106,21 @@ final class GrowthStatsAggregator
     {
         try {
             return app(AggregateExperimentMetrics::class)->handle($experiment);
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Collection<int, Experiment>  $experiments
+     * @return array{results: array<string, array<string, mixed>>, variant_count: int, assignment_count: int}|null
+     */
+    private static function safeAggregateExperimentMetricsBatch(object $aggregator, Collection $experiments): ?array
+    {
+        try {
+            $batch = $aggregator->handleMany($experiments);
+
+            return is_array($batch) ? $batch : null;
         } catch (Throwable) {
             return null;
         }
