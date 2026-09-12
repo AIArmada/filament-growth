@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AIArmada\FilamentGrowth\Resources\VariantResource\Tables;
 
+use AIArmada\CommerceSupport\Support\ConnectionDriver;
 use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
 use AIArmada\Growth\Enums\VariantStatus;
 use AIArmada\Growth\Models\Experiment;
@@ -28,10 +29,15 @@ class VariantsTable
                     ->label('Experiment')
                     ->state(fn (Variant $record): string => VariantsTable::experimentName($record))
                     ->searchable(query: function (Builder $query, string $search): Builder {
+                        $operator = match (ConnectionDriver::name($query->getConnection())) {
+                            'pgsql' => 'ilike',
+                            default => 'like',
+                        };
+
                         return $query->whereIn(
                             $query->getModel()->qualifyColumn('experiment_id'),
                             Experiment::query()
-                                ->where('name', 'like', '%' . $search . '%')
+                                ->where('name', $operator, '%' . $search . '%')
                                 ->select('id'),
                         );
                     }),

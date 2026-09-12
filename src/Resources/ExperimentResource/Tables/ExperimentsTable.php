@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AIArmada\FilamentGrowth\Resources\ExperimentResource\Tables;
 
+use AIArmada\CommerceSupport\Support\ConnectionDriver;
 use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
 use AIArmada\CommerceSupport\Support\OwnerScope;
 use AIArmada\CommerceSupport\Support\OwnerTuple\OwnerTupleColumns;
@@ -134,6 +135,10 @@ class ExperimentsTable
 
         $experimentTable = $query->getModel()->getTable();
         $trackedPropertyTable = (new TrackedProperty)->getTable();
+        $operator = match (ConnectionDriver::name($query->getConnection())) {
+            'pgsql' => 'ilike',
+            default => 'like',
+        };
 
         $trackedPropertyQuery = TrackedProperty::query();
 
@@ -142,7 +147,7 @@ class ExperimentsTable
         $trackedPropertyQuery = $trackedPropertyQuery
             ->selectRaw('1')
             ->whereColumn($trackedPropertyTable . '.id', $experimentTable . '.tracked_property_id')
-            ->where($trackedPropertyTable . '.name', 'like', '%' . $normalizedSearch . '%');
+            ->where($trackedPropertyTable . '.name', $operator, '%' . $normalizedSearch . '%');
 
         if (Experiment::ownerScopeConfig()->enabled) {
             return $query->whereExists(
