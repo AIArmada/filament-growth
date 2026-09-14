@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace AIArmada\FilamentGrowth\Pages;
 
-use AIArmada\Growth\Models\Experiment;
 use AIArmada\Growth\Settings\GrowthSettings;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -54,7 +53,7 @@ final class ManageGrowthSettings extends Page
 
         return $user !== null
             && parent::canAccess()
-            && Gate::forUser($user)->allows('viewAny', Experiment::class);
+            && Gate::forUser($user)->allows('growth.settings.manage');
     }
 
     public function mount(): void
@@ -91,7 +90,7 @@ final class ManageGrowthSettings extends Page
         abort_unless(static::canAccess(), 403);
 
         /** @var array<string, mixed> $state */
-        $state = $this->data ?? [];
+        $state = $this->getSchema('form')?->getState() ?? [];
 
         $settings = $this->resolveGrowthSettings();
         $settings->experimentMiddlewareEnabled = (bool) Arr::get($state, 'experimentMiddlewareEnabled', true);
@@ -107,6 +106,7 @@ final class ManageGrowthSettings extends Page
     {
         return [
             Action::make('save')
+                ->authorize(fn (): bool => auth()->user()?->can('growth.settings.manage') ?? false)
                 ->label('Save')
                 ->icon('heroicon-o-check')
                 ->color('primary')

@@ -129,6 +129,17 @@ The link preselects the experiment on the results page via the `experiment` quer
 
 If aggregation fails for a visible experiment, that row is skipped instead of breaking the widget.
 
+## Authorization
+
+Experiment and variant resources are gated by owner-aware policies (`ExperimentPolicy`, `VariantPolicy`): a panel user only lists, views, edits, or deletes records inside the current owner scope. The results page and dashboard additionally require an authenticated user who can `viewAny` experiments.
+
+The Growth settings page is a privileged surface: it toggles the global experiment-middleware kill switch, so it requires the dedicated `growth.settings.manage` Gate ability — experiment viewing alone is not enough.
+
+```php
+// AuthServiceProvider
+Gate::define('growth.settings.manage', fn ($user) => $user->hasRole('admin'));
+```
+
 ## Owner scoping expectations
 
 The package resolves readable and writable records through `AccessibleGrowthRecords`, and the policies delegate to the same access rules.

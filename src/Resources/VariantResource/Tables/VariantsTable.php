@@ -36,7 +36,7 @@ class VariantsTable
 
                         return $query->whereIn(
                             $query->getModel()->qualifyColumn('experiment_id'),
-                            Experiment::query()
+                            OwnerUiScope::apply(Experiment::query())
                                 ->where('name', $operator, '%' . $search . '%')
                                 ->select('id'),
                         );
@@ -91,7 +91,7 @@ class VariantsTable
             return (string) $record->experiment->name;
         }
 
-        $experiment = Experiment::query()->whereKey($record->experiment_id)->first();
+        $experiment = OwnerUiScope::apply(Experiment::query())->whereKey($record->experiment_id)->first();
 
         return $experiment instanceof Experiment ? (string) $experiment->name : '—';
     }

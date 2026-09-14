@@ -77,7 +77,7 @@ final class VariantResource extends Resource
             return true;
         }
 
-        $experiment = $record->relationLoaded('experiment') ? $record->experiment : Experiment::query()->find($record->experiment_id);
+        $experiment = $record->relationLoaded('experiment') ? $record->experiment : OwnerUiScope::apply(Experiment::query())->find($record->experiment_id);
 
         return $experiment instanceof Experiment && ExperimentHelpers::canMutateViaTrackedProperty($experiment);
     }
@@ -96,7 +96,7 @@ final class VariantResource extends Resource
             return true;
         }
 
-        $experiment = $record->relationLoaded('experiment') ? $record->experiment : Experiment::query()->find($record->experiment_id);
+        $experiment = $record->relationLoaded('experiment') ? $record->experiment : OwnerUiScope::apply(Experiment::query())->find($record->experiment_id);
 
         return $experiment instanceof Experiment && ExperimentHelpers::canMutateViaTrackedProperty($experiment);
     }

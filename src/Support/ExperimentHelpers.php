@@ -8,6 +8,7 @@ use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
 use AIArmada\Growth\Models\Experiment;
 use AIArmada\Signals\Models\TrackedProperty;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 
 final class ExperimentHelpers
 {
@@ -35,7 +36,7 @@ final class ExperimentHelpers
 
     public static function canDeleteAnyExperiment(): bool
     {
-        return true;
+        return Gate::allows('deleteAny', Experiment::class);
     }
 
     public static function canMutateViaTrackedProperty(Experiment $experiment): bool

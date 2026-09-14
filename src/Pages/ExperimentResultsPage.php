@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AIArmada\FilamentGrowth\Pages;
 
+use AIArmada\CommerceSupport\Support\ConnectionDriver;
 use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
 use AIArmada\CommerceSupport\Traits\FormatsMoney;
 use AIArmada\FilamentGrowth\Resources\ExperimentResource;
@@ -103,9 +104,9 @@ final class ExperimentResultsPage extends Page implements HasForms
                 ->schema([
                     Forms\Components\Select::make('experimentId')
                         ->label('Experiment')
-                        ->options($this->experimentOptions())
                         ->searchable()
-                        ->preload()
+                        ->getSearchResultsUsing(fn (string $search): array => $this->searchExperimentOptions($search))
+                        ->getOptionLabelUsing(fn ($value): ?string => $this->experimentOptionLabel($value))
                         ->live()
                         ->afterStateUpdated(fn (): null => $this->loadResults()),
 
@@ -132,7 +133,7 @@ final class ExperimentResultsPage extends Page implements HasForms
 
         $this->experimentId = $requestedExperimentId;
 
-        if (! Experiment::query()->whereKey($this->experimentId)->exists()) {
+        if (! OwnerUiScope::apply(Experiment::query())->whereKey($this->experimentId)->exists()) {
             $this->experimentId = null;
         }
     }
@@ -146,7 +147,7 @@ final class ExperimentResultsPage extends Page implements HasForms
             return null;
         }
 
-        $experiment = Experiment::query()->whereKey($experimentId)->first();
+        $experiment = OwnerUiScope::apply(Experiment::query())->whereKey($experimentId)->first();
 
         if (! $experiment instanceof Experiment) {
             return null;
@@ -258,13 +259,35 @@ final class ExperimentResultsPage extends Page implements HasForms
     /**
      * @return array<string, string>
      */
-    private function experimentOptions(): array
+    private function searchExperimentOptions(string $search): array
     {
-        return Experiment::query()
+        $query = OwnerUiScope::apply(Experiment::query());
+
+        $operator = match (ConnectionDriver::name($query->getConnection())) {
+            'pgsql' => 'ilike',
+            default => 'like',
+        };
+
+        return $query
+            ->where('name', $operator, '%' . $search . '%')
             ->orderByDesc('created_at')
-            ->get(['id', 'name'])
-            ->mapWithKeys(fn (Experiment $experiment): array => [(string) $experiment->getKey() => (string) $experiment->name])
+            ->limit(50)
+            ->pluck('name', 'id')
+            ->mapWithKeys(fn ($name, $id): array => [(string) $id => (string) $name])
             ->all();
+    }
+
+    private function experimentOptionLabel(mixed $value): ?string
+    {
+        if (! is_scalar($value) || (string) $value === '') {
+            return null;
+        }
+
+        $name = OwnerUiScope::apply(Experiment::query())
+            ->whereKey((string) $value)
+            ->value('name');
+
+        return is_string($name) ? $name : null;
     }
 
     /**
@@ -283,7 +306,7 @@ final class ExperimentResultsPage extends Page implements HasForms
 
     private function defaultExperimentId(): ?string
     {
-        $experimentId = Experiment::query()
+        $experimentId = OwnerUiScope::apply(Experiment::query())
             ->orderByDesc('created_at')
             ->value('id');
 

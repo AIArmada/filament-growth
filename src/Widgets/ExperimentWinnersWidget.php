@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AIArmada\FilamentGrowth\Widgets;
 
+use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
 use AIArmada\CommerceSupport\Traits\FormatsMoney;
 use AIArmada\FilamentGrowth\Pages\ExperimentResultsPage;
 use AIArmada\Growth\Actions\AggregateExperimentMetrics;
@@ -11,6 +12,7 @@ use AIArmada\Growth\Enums\ExperimentModuleType;
 use AIArmada\Growth\Models\Experiment;
 use Filament\Facades\Filament;
 use Filament\Widgets\Widget;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\Gate;
 use Throwable;
 
@@ -41,14 +43,18 @@ final class ExperimentWinnersWidget extends Widget
      */
     public function getExperimentSnapshots(): array
     {
-        return Experiment::query()
+        $experiments = OwnerUiScope::apply(Experiment::query())
             ->orderByDesc('updated_at')
             ->limit(5)
-            ->get()
-            ->map(function (Experiment $experiment): ?array {
-                $metrics = $this->safeAggregateExperimentMetrics($experiment);
+            ->get();
 
-                if ($metrics === null) {
+        $metricsByExperiment = $this->safeAggregateMany($experiments);
+
+        return $experiments
+            ->map(function (Experiment $experiment) use ($metricsByExperiment): ?array {
+                $metrics = $metricsByExperiment[(string) $experiment->getKey()] ?? null;
+
+                if (! is_array($metrics)) {
                     return null;
                 }
 
@@ -126,14 +132,21 @@ final class ExperimentWinnersWidget extends Widget
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @param  EloquentCollection<int, Experiment>  $experiments
+     * @return array<string, array<string, mixed>>
      */
-    private function safeAggregateExperimentMetrics(Experiment $experiment): ?array
+    private function safeAggregateMany(EloquentCollection $experiments): array
     {
+        if ($experiments->isEmpty()) {
+            return [];
+        }
+
         try {
-            return app(AggregateExperimentMetrics::class)->handle($experiment);
+            $batch = app(AggregateExperimentMetrics::class)->handleMany($experiments);
+
+            return is_array($batch['results'] ?? null) ? $batch['results'] : [];
         } catch (Throwable) {
-            return null;
+            return [];
         }
     }
 }
