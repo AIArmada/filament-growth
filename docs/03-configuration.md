@@ -24,6 +24,7 @@ return [
         'widgets' => true,
         'experiments' => true,
         'variants' => true,
+        'settings_page' => true,
     ],
 
     'resources' => [
@@ -32,6 +33,7 @@ return [
             'results' => 11,
             'experiments' => 20,
             'variants' => 21,
+            'settings' => 99,
         ],
     ],
 ];
@@ -78,6 +80,11 @@ Registers `ExperimentResource`.
 
 Registers `VariantResource`.
 
+### `features.settings_page`
+
+Registers the `ManageGrowthSettings` page. The page also stays hidden unless the signed-in
+user passes the `growth.settings.manage` Gate ability — see [usage](./04-usage.md).
+
 ## Resources
 
 ### `resources.navigation_sort`
@@ -88,6 +95,7 @@ Controls the order of registered navigation items:
 - `results`
 - `experiments`
 - `variants`
+- `settings`
 
 ## Example custom configuration
 
@@ -109,6 +117,7 @@ return [
         'widgets' => true,
         'experiments' => true,
         'variants' => false,
+        'settings_page' => true,
     ],
 
     'resources' => [
@@ -117,6 +126,7 @@ return [
             'results' => 31,
             'experiments' => 40,
             'variants' => 41,
+            'settings' => 99,
         ],
     ],
 ];
