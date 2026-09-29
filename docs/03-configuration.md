@@ -82,7 +82,8 @@ Registers `VariantResource`.
 
 ### `features.settings_page`
 
-Registers the `ManageGrowthSettings` settings page (requires the `growth.settings.manage` Gate).
+Registers the `ManageGrowthSettings` page. The page also stays hidden unless the signed-in
+user passes the `growth.settings.manage` Gate ability — see [usage](./04-usage.md).
 
 ## Resources
 
@@ -116,6 +117,7 @@ return [
         'widgets' => true,
         'experiments' => true,
         'variants' => false,
+        'settings_page' => true,
     ],
 
     'resources' => [
@@ -124,6 +126,7 @@ return [
             'results' => 31,
             'experiments' => 40,
             'variants' => 41,
+            'settings' => 99,
         ],
     ],
 ];
