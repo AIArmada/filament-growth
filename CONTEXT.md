@@ -42,7 +42,7 @@ keywords:
 ## Key surfaces
 - Resources: `ExperimentResource`, `VariantResource`
 - Actions/Services: `Support/ExperimentHelpers`, `Support/GrowthStatsAggregator`
-- Config `filament-growth.php`: `navigation`, `group`, `tables`, `stats_experiment_limit`, `features`, `dashboard`, `results`, `widgets`, `experiments`, `variants`, `settings_page`
+- Config `filament-growth.php`: `navigation`, `group`, `tables`, `stats_experiment_limit`, `features`, `dashboard`, `results`, `widgets`, `experiments`, `variants`
 
 ## Docs map
 - Start: `01-overview` → `03-configuration` → `04-usage` → `99-troubleshooting`

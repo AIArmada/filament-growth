@@ -11,7 +11,7 @@ The `aiarmada/filament-growth` package is the Filament admin adapter for `aiarma
 ## What this package owns
 
 - Filament resources for experiments and variants
-- Growth dashboard, experiment results page, growth settings page, and summary widgets
+- Growth dashboard, experiment results page, and summary widgets
 - Filament-facing policy-gated admin workflows for experimentation management
 - Owner-safe read paths that only surface experiments with consistent tracked-property access
 
@@ -25,12 +25,12 @@ The `aiarmada/filament-growth` package is the Filament admin adapter for `aiarma
 
 - [`aiarmada/growth`](../../growth/docs/01-overview.md) — core experimentation engine
 - [`aiarmada/signals`](../../signals/docs/01-overview.md) — tracked properties and event attribution
-- [`aiarmada/commerce-support`](../../commerce-support/docs/04-multi-tenancy.md) — owner resolution and scoping primitives
+- [`aiarmada/commerce-support`](../../commerce-support/docs/14-multi-tenancy.md) — owner resolution and scoping primitives
 
 ## Main models services or surfaces
 
 - **Resources** — `ExperimentResource`, `VariantResource`
-- **Pages** — `GrowthDashboard`, `ExperimentResultsPage`, `ManageGrowthSettings`
+- **Pages** — `GrowthDashboard`, `ExperimentResultsPage`
 - **Widgets** — `GrowthStatsWidget`, `ExperimentWinnersWidget`
 
 ## Owner scoping and security notes
@@ -73,7 +73,7 @@ The `aiarmada/filament-growth` package is the Filament admin adapter for `aiarma
 
 - [`aiarmada/growth`](../../growth/docs/01-overview.md) for the experiment, variant, assignment, and metrics domain layer
 - [`aiarmada/signals`](../../signals/docs/01-overview.md) for tracked properties and event attribution
-- [`aiarmada/commerce-support`](../../commerce-support/docs/04-multi-tenancy.md) for owner resolution and scoping behavior
+- [`aiarmada/commerce-support`](../../commerce-support/docs/14-multi-tenancy.md) for owner resolution and scoping behavior
 
 ## Next steps
 

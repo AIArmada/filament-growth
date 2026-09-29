@@ -142,8 +142,7 @@ Gate::define('growth.settings.manage', fn ($user) => $user->hasRole('admin'));
 
 ## Owner scoping expectations
 
-The package resolves readable and writable records through `OwnerUiScope` and the
-`ExperimentHelpers` support class, and the policies delegate to the same access rules.
+The package resolves readable and writable records through `ExperimentHelpers` and commerce-support's `OwnerUiScope`, and the policies delegate to the same access rules.
 
 That means:
 
@@ -153,6 +152,6 @@ That means:
 - result pages only load experiments the current owner can access
 - dashboard pages and widgets require an authenticated user who can `viewAny` experiments
 
-If an experiment and its tracked property no longer line up, the owner-safe queries intentionally hide that record from the Filament layer.
+If an experiment and its tracked property no longer line up, `ExperimentHelpers` intentionally hides that record from the Filament layer.
 
-For multi-tenant applications, make sure your owner resolver is configured through [`commerce-support`](../../commerce-support/docs/04-multi-tenancy.md).
+For multi-tenant applications, make sure your owner resolver is configured through [`commerce-support`](../../commerce-support/docs/14-multi-tenancy.md).
