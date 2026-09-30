@@ -19,7 +19,7 @@
     "aiarmada/commerce-support": "self.version",
     "aiarmada/growth": "self.version",
     "filament/filament": "^5.8.1",
-    "php": "^8.4"
+    "php": "^8.5"
   },
   "autoload": {
     "psr-4": {
