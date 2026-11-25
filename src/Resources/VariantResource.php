@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AIArmada\FilamentGrowth\Resources;
 
 use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
+use AIArmada\CommerceSupport\Support\OwnerTuple\OwnerTupleColumns;
 use AIArmada\FilamentGrowth\Resources\VariantResource\Pages;
 use AIArmada\FilamentGrowth\Resources\VariantResource\Schemas\VariantForm;
 use AIArmada\FilamentGrowth\Resources\VariantResource\Tables\VariantsTable;
@@ -12,6 +13,7 @@ use AIArmada\FilamentGrowth\Support\ExperimentHelpers;
 use AIArmada\Growth\Enums\ExperimentModuleType;
 use AIArmada\Growth\Models\Experiment;
 use AIArmada\Growth\Models\Variant;
+use AIArmada\Signals\Models\TrackedProperty;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -34,8 +36,25 @@ final class VariantResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
+        $experimentColumns = OwnerTupleColumns::forModelClass(Experiment::class);
+        $propertyColumns = OwnerTupleColumns::forModelClass(TrackedProperty::class);
+
         return OwnerUiScope::apply(Variant::query())
-            ->with(['experiment:id,name']);
+            ->whereIn('experiment_id', ExperimentHelpers::scopeExperiments(Experiment::query())->select('id'))
+            ->with([
+                'experiment:' . implode(',', array_values(array_unique([
+                    'id',
+                    'name',
+                    'tracked_property_id',
+                    $experimentColumns->ownerTypeColumn,
+                    $experimentColumns->ownerIdColumn,
+                ]))),
+                'experiment.trackedProperty:' . implode(',', array_values(array_unique([
+                    'id',
+                    $propertyColumns->ownerTypeColumn,
+                    $propertyColumns->ownerIdColumn,
+                ]))),
+            ]);
     }
 
     public static function getNavigationGroup(): string | UnitEnum | null
@@ -73,13 +92,7 @@ final class VariantResource extends Resource
             return false;
         }
 
-        if (OwnerUiScope::canMutateRecord($record)) {
-            return true;
-        }
-
-        $experiment = $record->relationLoaded('experiment') ? $record->experiment : OwnerUiScope::apply(Experiment::query())->find($record->experiment_id);
-
-        return $experiment instanceof Experiment && ExperimentHelpers::canMutateViaTrackedProperty($experiment);
+        return ExperimentHelpers::canMutateVariant($record);
     }
 
     public static function canDelete(Model $record): bool
@@ -92,13 +105,7 @@ final class VariantResource extends Resource
             return false;
         }
 
-        if (OwnerUiScope::canMutateRecord($record)) {
-            return true;
-        }
-
-        $experiment = $record->relationLoaded('experiment') ? $record->experiment : OwnerUiScope::apply(Experiment::query())->find($record->experiment_id);
-
-        return $experiment instanceof Experiment && ExperimentHelpers::canMutateViaTrackedProperty($experiment);
+        return ExperimentHelpers::canMutateVariant($record);
     }
 
     public static function canDeleteAny(): bool

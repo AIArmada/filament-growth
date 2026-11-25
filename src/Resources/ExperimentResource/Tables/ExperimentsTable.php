@@ -217,7 +217,7 @@ class ExperimentsTable
 
     private static function canEditRecord(Experiment $record): bool
     {
-        return OwnerUiScope::canMutateRecord($record);
+        return ExperimentHelpers::canMutateExperiment($record);
     }
 
     private static function statusOperationalDescription(ExperimentStatus $status): string
@@ -238,7 +238,7 @@ class ExperimentsTable
     {
         DB::transaction(function () use ($records): void {
             foreach ($records as $record) {
-                if (! $record instanceof Experiment || ! OwnerUiScope::canMutateRecord($record)) {
+                if (! $record instanceof Experiment || ! ExperimentHelpers::canMutateExperiment($record)) {
                     throw new RuntimeException('Global growth experiments can only be deleted from explicit global context.');
                 }
             }

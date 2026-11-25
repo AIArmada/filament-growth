@@ -6,6 +6,7 @@ namespace AIArmada\FilamentGrowth\Resources\VariantResource\Tables;
 
 use AIArmada\CommerceSupport\Support\ConnectionDriver;
 use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
+use AIArmada\FilamentGrowth\Support\ExperimentHelpers;
 use AIArmada\Growth\Enums\VariantStatus;
 use AIArmada\Growth\Models\Experiment;
 use AIArmada\Growth\Models\Variant;
@@ -70,7 +71,7 @@ class VariantsTable
             ])
             ->actions([
                 EditAction::make()
-                    ->visible(fn (Variant $record): bool => OwnerUiScope::canMutateRecord($record)),
+                    ->visible(fn (Variant $record): bool => ExperimentHelpers::canMutateVariant($record)),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
@@ -103,7 +104,7 @@ class VariantsTable
     {
         DB::transaction(function () use ($records): void {
             foreach ($records as $record) {
-                if (! $record instanceof Variant || ! OwnerUiScope::canMutateRecord($record)) {
+                if (! $record instanceof Variant || ! ExperimentHelpers::canMutateVariant($record)) {
                     throw new RuntimeException('Global growth variants can only be deleted from explicit global context.');
                 }
             }

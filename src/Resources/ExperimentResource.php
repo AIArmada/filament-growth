@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AIArmada\FilamentGrowth\Resources;
 
 use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
+use AIArmada\CommerceSupport\Support\OwnerTuple\OwnerTupleColumns;
 use AIArmada\FilamentGrowth\Resources\ExperimentResource\Pages;
 use AIArmada\FilamentGrowth\Resources\ExperimentResource\Schemas\ExperimentForm;
 use AIArmada\FilamentGrowth\Resources\ExperimentResource\Tables\ExperimentsTable;
@@ -34,15 +35,22 @@ final class ExperimentResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
+        $propertyColumns = OwnerTupleColumns::forModelClass(TrackedProperty::class);
+
         return ExperimentHelpers::applyOwnerSafeRelationCounts(
-            OwnerUiScope::apply(Experiment::query()),
+            ExperimentHelpers::scopeExperiments(Experiment::query()),
         )->with([
-            'trackedProperty' => function ($query) {
+            'trackedProperty' => function ($query) use ($propertyColumns) {
                 $builder = $query instanceof Relation ? $query->getQuery() : $query;
 
                 /** @var Builder<TrackedProperty> $builder */
                 return OwnerUiScope::apply($builder)
-                    ->select(['id', 'name']);
+                    ->select(array_values(array_unique([
+                        'id',
+                        'name',
+                        $propertyColumns->ownerTypeColumn,
+                        $propertyColumns->ownerIdColumn,
+                    ])));
             },
         ]);
     }
@@ -83,8 +91,7 @@ final class ExperimentResource extends Resource
             return false;
         }
 
-        return OwnerUiScope::canMutateRecord($record)
-            || ExperimentHelpers::canMutateViaTrackedProperty($record);
+        return ExperimentHelpers::canMutateExperiment($record);
     }
 
     public static function canDelete(Model $record): bool
@@ -97,8 +104,7 @@ final class ExperimentResource extends Resource
             return false;
         }
 
-        return OwnerUiScope::canMutateRecord($record)
-            || ExperimentHelpers::canMutateViaTrackedProperty($record);
+        return ExperimentHelpers::canMutateExperiment($record);
     }
 
     public static function canDeleteAny(): bool

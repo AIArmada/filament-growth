@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace AIArmada\FilamentGrowth\Resources\VariantResource\Schemas;
 
-use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
 use AIArmada\CommerceSupport\Support\OwnerContext;
 use AIArmada\CommerceSupport\Support\OwnerScopeKey;
+use AIArmada\FilamentGrowth\Support\ExperimentHelpers;
 use AIArmada\Growth\Enums\ExperimentModuleType;
 use AIArmada\Growth\Enums\VariantStatus;
 use AIArmada\Growth\Models\Experiment;
 use AIArmada\Growth\Models\Variant;
-use AIArmada\Signals\Models\TrackedProperty;
 use Filament\Forms;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -175,16 +174,7 @@ class VariantForm
      */
     private static function scopeAccessibleExperiments(Builder $query): Builder
     {
-        $query = OwnerUiScope::apply($query, includeGlobal: false);
-
-        if (Experiment::ownerScopeConfig()->enabled || ! TrackedProperty::ownerScopeConfig()->enabled) {
-            return $query;
-        }
-
-        return $query->whereIn(
-            'tracked_property_id',
-            OwnerUiScope::apply(TrackedProperty::query(), includeGlobal: false)->select('id'),
-        );
+        return ExperimentHelpers::scopeExperiments($query, writable: true);
     }
 
     /**
