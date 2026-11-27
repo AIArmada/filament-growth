@@ -133,7 +133,9 @@ If aggregation fails for a visible experiment, that row is skipped instead of br
 
 Experiment and variant resources are gated by owner-aware policies (`ExperimentPolicy`, `VariantPolicy`): a panel user only lists, views, edits, or deletes records inside the current owner scope. The results page and dashboard additionally require an authenticated user who can `viewAny` experiments.
 
-The Growth settings page is a privileged surface: it toggles the global experiment-middleware kill switch, so it requires the dedicated `growth.settings.manage` Gate ability — experiment viewing alone is not enough.
+The Growth settings page toggles experiment middleware for every tenant and requires the `growth.settings.manage` Gate ability. When Growth or Signals ownership is enabled, configure the platform administration panel's owner middleware to establish explicit global context on both the initial page request and subsequent Livewire requests.
+
+All resource, table, page, and widget authorization checks use the Filament panel's authenticated user through `Gate::forUser`, so an ambient default-guard user cannot authorize Growth writes.
 
 ```php
 // AuthServiceProvider
@@ -142,8 +144,10 @@ Gate::define('growth.settings.manage', fn ($user) => $user->hasRole('admin'));
 
 ## Owner scoping expectations
 
-The package resolves readable and writable records through `OwnerUiScope` and the
-`ExperimentHelpers` support class, and the policies delegate to the same access rules.
+The package resolves readable and writable records through Growth's canonical owner chain
+(`ExperimentOwnership`) and the `ExperimentAccess` support class, and the policies delegate to
+the same access rules. Filament's own owner helper remains only for record-owner lookups such as
+resolving a row's tracked property.
 
 That means:
 

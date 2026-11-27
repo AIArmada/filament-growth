@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace AIArmada\FilamentGrowth\Widgets;
 
-use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
 use AIArmada\CommerceSupport\Traits\FormatsMoney;
 use AIArmada\FilamentGrowth\Pages\ExperimentResultsPage;
 use AIArmada\Growth\Actions\AggregateExperimentMetrics;
 use AIArmada\Growth\Enums\ExperimentModuleType;
 use AIArmada\Growth\Models\Experiment;
+use AIArmada\Growth\Queries\ExperimentOwnership;
 use Filament\Facades\Filament;
 use Filament\Widgets\Widget;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -26,7 +26,6 @@ final class ExperimentWinnersWidget extends Widget
 
     protected int | string | array $columnSpan = 'full';
 
-    /** @phpstan-ignore-next-line property.defaultValue */
     protected string $view = 'filament-growth::widgets.experiment-winners';
 
     public static function canView(): bool
@@ -43,7 +42,7 @@ final class ExperimentWinnersWidget extends Widget
      */
     public function getExperimentSnapshots(): array
     {
-        $experiments = OwnerUiScope::apply(Experiment::query())
+        $experiments = ExperimentOwnership::scopeExperiments(Experiment::query())
             ->orderByDesc('updated_at')
             ->limit(5)
             ->get();

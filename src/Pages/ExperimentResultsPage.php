@@ -11,6 +11,7 @@ use AIArmada\FilamentGrowth\Resources\ExperimentResource;
 use AIArmada\Growth\Actions\AggregateExperimentMetrics;
 use AIArmada\Growth\Enums\ExperimentModuleType;
 use AIArmada\Growth\Models\Experiment;
+use AIArmada\Growth\Queries\ExperimentOwnership;
 use AIArmada\Signals\Features\Ingestion\Models\TrackedProperty;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -133,7 +134,7 @@ final class ExperimentResultsPage extends Page implements HasForms
 
         $this->experimentId = $requestedExperimentId;
 
-        if (! OwnerUiScope::apply(Experiment::query())->whereKey($this->experimentId)->exists()) {
+        if (! ExperimentOwnership::scopeExperiments(Experiment::query())->whereKey($this->experimentId)->exists()) {
             $this->experimentId = null;
         }
     }
@@ -147,7 +148,7 @@ final class ExperimentResultsPage extends Page implements HasForms
             return null;
         }
 
-        $experiment = OwnerUiScope::apply(Experiment::query())->whereKey($experimentId)->first();
+        $experiment = ExperimentOwnership::scopeExperiments(Experiment::query())->whereKey($experimentId)->first();
 
         if (! $experiment instanceof Experiment) {
             return null;
@@ -261,7 +262,7 @@ final class ExperimentResultsPage extends Page implements HasForms
      */
     private function searchExperimentOptions(string $search): array
     {
-        $query = OwnerUiScope::apply(Experiment::query());
+        $query = ExperimentOwnership::scopeExperiments(Experiment::query());
 
         $operator = match (ConnectionDriver::name($query->getConnection())) {
             'pgsql' => 'ilike',
@@ -283,7 +284,7 @@ final class ExperimentResultsPage extends Page implements HasForms
             return null;
         }
 
-        $name = OwnerUiScope::apply(Experiment::query())
+        $name = ExperimentOwnership::scopeExperiments(Experiment::query())
             ->whereKey((string) $value)
             ->value('name');
 
@@ -306,7 +307,7 @@ final class ExperimentResultsPage extends Page implements HasForms
 
     private function defaultExperimentId(): ?string
     {
-        $experimentId = OwnerUiScope::apply(Experiment::query())
+        $experimentId = ExperimentOwnership::scopeExperiments(Experiment::query())
             ->orderByDesc('created_at')
             ->value('id');
 
@@ -439,12 +440,14 @@ final class ExperimentResultsPage extends Page implements HasForms
 
     private function findTrackedPropertyForExperiment(Experiment $experiment): ?TrackedProperty
     {
-        $query = OwnerUiScope::applyForRecordOwner(
-            TrackedProperty::query(),
-            $experiment,
-            recordConfigKey: 'growth.features.owner',
-            queryConfigKey: 'signals.owner',
-        );
+        $query = Experiment::ownerScopeConfig()->enabled
+            ? OwnerUiScope::applyForRecordOwner(
+                TrackedProperty::query(),
+                $experiment,
+                recordConfigKey: 'growth.features.owner',
+                queryConfigKey: 'signals.owner',
+            )
+            : OwnerUiScope::apply(TrackedProperty::query());
 
         $trackedProperty = $query
             ->whereKey($experiment->tracked_property_id)

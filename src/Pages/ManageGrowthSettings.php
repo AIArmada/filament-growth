@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace AIArmada\FilamentGrowth\Pages;
 
-use AIArmada\Growth\Settings\GrowthSettings;
+use AIArmada\Growth\Actions\UpdateGrowthSettings;
+use AIArmada\Growth\Queries\ExperimentMiddlewareEnabled;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -14,7 +15,6 @@ use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
-use Spatie\LaravelSettings\Exceptions\MissingSettings;
 use UnitEnum;
 
 final class ManageGrowthSettings extends Page
@@ -33,7 +33,7 @@ final class ManageGrowthSettings extends Page
 
     public static function getNavigationGroup(): string | UnitEnum | null
     {
-        return config('filament-growth.navigation.group');
+        return config('filament-growth.navigation.settings_group');
     }
 
     public static function getNavigationSort(): int
@@ -52,6 +52,7 @@ final class ManageGrowthSettings extends Page
         $user = Filament::auth()->user();
 
         return $user !== null
+            && UpdateGrowthSettings::canWriteInCurrentContext()
             && parent::canAccess()
             && Gate::forUser($user)->allows('growth.settings.manage');
     }
@@ -60,10 +61,8 @@ final class ManageGrowthSettings extends Page
     {
         abort_unless(static::canAccess(), 403);
 
-        $settings = $this->resolveGrowthSettings();
-
         $this->data = [
-            'experimentMiddlewareEnabled' => $settings->experimentMiddlewareEnabled ?? true,
+            'experimentMiddlewareEnabled' => app(ExperimentMiddlewareEnabled::class)->handle(),
         ];
 
         $this->getSchema('form')?->fill($this->data);
@@ -92,9 +91,7 @@ final class ManageGrowthSettings extends Page
         /** @var array<string, mixed> $state */
         $state = $this->getSchema('form')?->getState() ?? [];
 
-        $settings = $this->resolveGrowthSettings();
-        $settings->experimentMiddlewareEnabled = (bool) Arr::get($state, 'experimentMiddlewareEnabled', true);
-        $settings->save();
+        app(UpdateGrowthSettings::class)->handle((bool) Arr::get($state, 'experimentMiddlewareEnabled', false));
 
         Notification::make()
             ->title('Saved')
@@ -106,33 +103,11 @@ final class ManageGrowthSettings extends Page
     {
         return [
             Action::make('save')
-                ->authorize(fn (): bool => auth()->user()?->can('growth.settings.manage') ?? false)
+                ->authorize(fn (): bool => static::canAccess())
                 ->label('Save')
                 ->icon('heroicon-o-check')
                 ->color('primary')
                 ->action('save'),
         ];
-    }
-
-    private function resolveGrowthSettings(): GrowthSettings
-    {
-        try {
-            $settings = app(GrowthSettings::class);
-            $experimentMiddlewareEnabled = $settings->experimentMiddlewareEnabled;
-
-            if (is_bool($experimentMiddlewareEnabled)) {
-                return $settings;
-            }
-
-            return $settings;
-        } catch (MissingSettings) {
-            $settings = new GrowthSettings([
-                'experimentMiddlewareEnabled' => true,
-            ]);
-
-            $settings->save();
-
-            return $settings;
-        }
     }
 }

@@ -39,9 +39,9 @@ This creates `config/filament-growth.php`.
 
 `filament-growth` is the admin surface only. It expects the underlying Growth package to be installed and working:
 
-- [`aiarmada/growth`](../../growth/docs/02-installation.md)
-- Signals tracked properties available from [`aiarmada/signals`](../../signals/docs/01-overview.md)
-- owner resolution configured if your application runs in owner-scoped mode
+- [`aiarmada/growth`](../../growth/docs/02-installation.md), which requires [`aiarmada/signals`](../../signals/docs/01-overview.md)
+- at least one Signals tracked property visible to the panel user; the experiment form cannot create an experiment without one
+- owner resolution configured if your application runs in owner-scoped mode, with Growth and Signals owner modes enabled together
 
 The package does not ship its own database tables or migrations.
 

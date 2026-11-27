@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace AIArmada\FilamentGrowth\Widgets;
 
 use AIArmada\CommerceSupport\Traits\FormatsMoney;
-use AIArmada\FilamentGrowth\Support\GrowthStatsAggregator;
+use AIArmada\FilamentGrowth\Queries\GrowthStatsAggregator;
 use AIArmada\Growth\Models\Experiment;
 use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget;

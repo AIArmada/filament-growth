@@ -18,6 +18,7 @@
   "require": {
     "aiarmada/commerce-support": "self.version",
     "aiarmada/growth": "self.version",
+    "aiarmada/signals": "self.version",
     "filament/filament": "^5.11.1",
     "php": "^8.5"
   },
@@ -38,7 +39,12 @@
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
-  "suggest": {
-    "aiarmada/signals": "Optional integration"
+  "scripts": {
+    "arch:boundaries": "@php tools/package-check.php",
+    "arch:writes": "@php ../../vendor/bin/phpstan analyse -c tools/package-phpstan.neon --autoload-file=tools/Architecture/PackageOwnedWriteRule.php --no-progress",
+    "arch:check": [
+      "@arch:boundaries",
+      "@arch:writes"
+    ]
   }
 }

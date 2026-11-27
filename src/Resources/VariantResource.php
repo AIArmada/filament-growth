@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace AIArmada\FilamentGrowth\Resources;
 
-use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
 use AIArmada\CommerceSupport\Support\OwnerTuple\OwnerTupleColumns;
+use AIArmada\FilamentGrowth\Authorization\ExperimentAccess;
 use AIArmada\FilamentGrowth\Resources\VariantResource\Pages;
 use AIArmada\FilamentGrowth\Resources\VariantResource\Schemas\VariantForm;
 use AIArmada\FilamentGrowth\Resources\VariantResource\Tables\VariantsTable;
-use AIArmada\FilamentGrowth\Support\ExperimentHelpers;
-use AIArmada\Growth\Enums\ExperimentModuleType;
 use AIArmada\Growth\Models\Experiment;
 use AIArmada\Growth\Models\Variant;
+use AIArmada\Growth\Queries\ExperimentOwnership;
 use AIArmada\Signals\Features\Ingestion\Models\TrackedProperty;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -20,7 +19,6 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Gate;
 use UnitEnum;
 
 final class VariantResource extends Resource
@@ -39,8 +37,7 @@ final class VariantResource extends Resource
         $experimentColumns = OwnerTupleColumns::forModelClass(Experiment::class);
         $propertyColumns = OwnerTupleColumns::forModelClass(TrackedProperty::class);
 
-        return OwnerUiScope::apply(Variant::query())
-            ->whereIn('experiment_id', ExperimentHelpers::scopeExperiments(Experiment::query())->select('id'))
+        return ExperimentOwnership::scopeVariants(Variant::query())
             ->with([
                 'experiment:' . implode(',', array_values(array_unique([
                     'id',
@@ -79,85 +76,24 @@ final class VariantResource extends Resource
 
     public static function canCreate(): bool
     {
-        return parent::canCreate();
+        return ExperimentAccess::can('create', Variant::class);
     }
 
     public static function canEdit(Model $record): bool
     {
-        if (! $record instanceof Variant) {
-            return false;
-        }
-
-        if (! parent::canEdit($record)) {
-            return false;
-        }
-
-        return ExperimentHelpers::canMutateVariant($record);
+        return $record instanceof Variant
+            && ExperimentAccess::can('update', $record);
     }
 
     public static function canDelete(Model $record): bool
     {
-        if (! $record instanceof Variant) {
-            return false;
-        }
-
-        if (! parent::canDelete($record)) {
-            return false;
-        }
-
-        return ExperimentHelpers::canMutateVariant($record);
+        return $record instanceof Variant
+            && ExperimentAccess::can('delete', $record);
     }
 
     public static function canDeleteAny(): bool
     {
-        return parent::canDeleteAny()
-            && Gate::allows('deleteAny', static::getModel());
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, mixed>
-     */
-    public static function normalizeFormData(array $data): array
-    {
-        $data['settings'] = static::normalizeSettingsForExperiment(
-            $data['experiment_id'] ?? null,
-            $data['settings'] ?? null,
-        );
-
-        return $data;
-    }
-
-    /**
-     * @param  array<string, mixed>|null  $settings
-     * @return array<string, mixed>|null
-     */
-    private static function normalizeSettingsForExperiment(mixed $experimentId, mixed $settings): ?array
-    {
-        $moduleType = VariantForm::selectedExperimentModuleType($experimentId);
-        $existingSettings = is_array($settings) ? $settings : [];
-        $allowedKeys = match ($moduleType) {
-            ExperimentModuleType::SalesPageTest->value => ['destination_url', 'headline', 'cta_copy'],
-            ExperimentModuleType::FunnelTest->value => ['entry_path', 'step_key', 'offer_label'],
-            ExperimentModuleType::PricingTest->value => ['price_label', 'price_minor', 'currency'],
-            default => [],
-        };
-
-        if ($allowedKeys === []) {
-            return null;
-        }
-
-        $normalizedSettings = [];
-
-        foreach ($allowedKeys as $allowedKey) {
-            if (! array_key_exists($allowedKey, $existingSettings)) {
-                continue;
-            }
-
-            $normalizedSettings[$allowedKey] = $existingSettings[$allowedKey];
-        }
-
-        return $normalizedSettings === [] ? null : $normalizedSettings;
+        return ExperimentAccess::can('deleteAny', Variant::class);
     }
 
     public static function getPages(): array

@@ -6,7 +6,8 @@ namespace AIArmada\FilamentGrowth\Resources\VariantResource\Tables;
 
 use AIArmada\CommerceSupport\Support\ConnectionDriver;
 use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
-use AIArmada\FilamentGrowth\Support\ExperimentHelpers;
+use AIArmada\FilamentGrowth\Actions\DeleteSelectedVariants;
+use AIArmada\FilamentGrowth\Authorization\ExperimentAccess;
 use AIArmada\Growth\Enums\VariantStatus;
 use AIArmada\Growth\Models\Experiment;
 use AIArmada\Growth\Models\Variant;
@@ -17,8 +18,6 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
-use RuntimeException;
 
 class VariantsTable
 {
@@ -71,7 +70,7 @@ class VariantsTable
             ])
             ->actions([
                 EditAction::make()
-                    ->visible(fn (Variant $record): bool => ExperimentHelpers::canMutateVariant($record)),
+                    ->visible(fn (Variant $record): bool => ExperimentAccess::can('update', $record)),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
@@ -80,7 +79,7 @@ class VariantsTable
                         ->visible(fn (): bool => VariantsTable::canDeleteAnyVariant())
                         ->requiresConfirmation()
                         ->action(function (Collection $records): void {
-                            VariantsTable::deleteSelectedVariants($records);
+                            app(DeleteSelectedVariants::class)->handle($records);
                         }),
                 ]),
             ]);
@@ -97,27 +96,8 @@ class VariantsTable
         return $experiment instanceof Experiment ? (string) $experiment->name : '—';
     }
 
-    /**
-     * @param  Collection<int|string, Variant>  $records
-     */
-    private static function deleteSelectedVariants(Collection $records): void
-    {
-        DB::transaction(function () use ($records): void {
-            foreach ($records as $record) {
-                if (! $record instanceof Variant || ! ExperimentHelpers::canMutateVariant($record)) {
-                    throw new RuntimeException('Global growth variants can only be deleted from explicit global context.');
-                }
-            }
-
-            foreach ($records as $record) {
-                $record->delete();
-            }
-        });
-    }
-
     private static function canDeleteAnyVariant(): bool
     {
-        return OwnerUiScope::canCreate(Variant::class)
-            && Variant::query()->exists();
+        return ExperimentAccess::can('deleteAny', Variant::class);
     }
 }

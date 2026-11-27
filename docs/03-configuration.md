@@ -45,6 +45,10 @@ return [
 
 Controls the Filament navigation group used by the dashboard, results page, and resources.
 
+### `navigation.settings_group`
+
+Controls the Filament navigation group used by the `ManageGrowthSettings` page. Set it when settings pages live in a different navigation group from the Growth resources; it defaults to `Growth`.
+
 ## Tables
 
 ### `tables.stats_experiment_limit`
@@ -83,7 +87,8 @@ Registers `VariantResource`.
 ### `features.settings_page`
 
 Registers the `ManageGrowthSettings` page. The page also stays hidden unless the signed-in
-user passes the `growth.settings.manage` Gate ability — see [usage](./04-usage.md).
+user passes the `growth.settings.manage` Gate ability and, when Growth or Signals ownership is enabled, the panel has an explicit global owner context. See [usage](./04-usage.md).
+When Growth ownership is enabled, the page saves through an explicit global owner context because the middleware kill switch is global.
 
 ## Resources
 

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace AIArmada\FilamentGrowth\Resources\ExperimentResource\Schemas;
 
-use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
 use AIArmada\CommerceSupport\Support\OwnerContext;
 use AIArmada\CommerceSupport\Support\OwnerScopeKey;
 use AIArmada\Growth\Actions\ResolveExperimentPreset;
 use AIArmada\Growth\Enums\ExperimentModuleType;
 use AIArmada\Growth\Enums\ExperimentStatus;
 use AIArmada\Growth\Models\Experiment;
+use AIArmada\Growth\Queries\ExperimentOwnership;
 use AIArmada\Signals\Features\Ingestion\Models\TrackedProperty;
 use Filament\Forms;
 use Filament\Schemas\Components\Section;
@@ -44,7 +44,7 @@ class ExperimentForm
                         ->relationship(
                             name: 'trackedProperty',
                             titleAttribute: 'name',
-                            modifyQueryUsing: fn (Builder $query): Builder => OwnerUiScope::apply($query, includeGlobal: false),
+                            modifyQueryUsing: fn (Builder $query): Builder => ExperimentOwnership::scopeOwner($query, writable: true),
                         )
                         ->disabledOn('edit')
                         ->required()

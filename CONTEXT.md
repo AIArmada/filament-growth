@@ -37,11 +37,12 @@ keywords:
 ## Decide fast
 - Use when: Experiment admin UI.
 - Skip when: Assignment math — see growth.
-- Owner/security: ExperimentHelpers owner-aware.
+- Owner/security: ExperimentAccess owner-aware.
 
 ## Key surfaces
 - Resources: `ExperimentResource`, `VariantResource`
-- Actions/Services: `Support/ExperimentHelpers`, `Support/GrowthStatsAggregator`
+- Authorization and queries: `Authorization/ExperimentAccess`, `Queries/GrowthStatsAggregator`
+- Authorized UI operations: `Actions/DeleteSelectedExperiments`, `Actions/DeleteSelectedVariants`, `Actions/SetExperimentRunning` delegate persistence to Growth. Create/edit pages and the settings page also call Growth actions directly.
 - Config `filament-growth.php`: `navigation`, `group`, `tables`, `stats_experiment_limit`, `features`, `dashboard`, `results`, `widgets`, `experiments`, `variants`, `settings_page`
 
 ## Docs map

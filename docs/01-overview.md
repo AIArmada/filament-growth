@@ -17,7 +17,7 @@ The `aiarmada/filament-growth` package is the Filament admin adapter for `aiarma
 
 ## What this package does not own
 
-- Experiment assignment, Signals enrichment, or metrics aggregation rules; those stay in `aiarmada/growth`
+- Experiment and variant persistence, lifecycle transitions, global settings persistence, assignment, Signals enrichment, or metrics aggregation rules; those stay in `aiarmada/growth`
 - Signals event storage and tracked-property ownership
 - Tenant resolution itself; it consumes owner context from the host app and `commerce-support`
 
@@ -55,6 +55,7 @@ The `aiarmada/filament-growth` package is the Filament admin adapter for `aiarma
 
 - Filament plugin registration through `FilamentGrowthPlugin`
 - Owner-scoped experiment and variant queries by default
+- Policy-gated resources delegate all durable mutations to Growth actions; they never persist experiment or variant records directly.
 - Policy-gated resources, pages, and widgets backed by `ExperimentPolicy` and `VariantPolicy`
 - Preset-aware experiment forms powered by `ResolveExperimentPreset`
 - Module-aware variant settings based on the selected experiment type

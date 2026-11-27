@@ -8,8 +8,10 @@ use AIArmada\CommerceSupport\Support\ConnectionDriver;
 use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
 use AIArmada\CommerceSupport\Support\OwnerScope;
 use AIArmada\CommerceSupport\Support\OwnerTuple\OwnerTupleColumns;
+use AIArmada\FilamentGrowth\Actions\DeleteSelectedExperiments;
+use AIArmada\FilamentGrowth\Actions\SetExperimentRunning;
+use AIArmada\FilamentGrowth\Authorization\ExperimentAccess;
 use AIArmada\FilamentGrowth\Pages\ExperimentResultsPage;
-use AIArmada\FilamentGrowth\Support\ExperimentHelpers;
 use AIArmada\Growth\Enums\ExperimentModuleType;
 use AIArmada\Growth\Enums\ExperimentStatus;
 use AIArmada\Growth\Models\Experiment;
@@ -22,8 +24,6 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
-use RuntimeException;
 
 class ExperimentsTable
 {
@@ -52,18 +52,10 @@ class ExperimentsTable
                     Tables\Columns\ToggleColumn::make('is_running')
                         ->label('Running')
                         ->state(fn (Experiment $record): bool => $record->status === ExperimentStatus::Active)
-                        ->disabled(fn (Experiment $record): bool => ! ExperimentsTable::canEditRecord($record) || $record->status === ExperimentStatus::Concluded)
+                        ->disabled(fn (Experiment $record): bool => ! ExperimentsTable::canEditRecord($record) || in_array($record->status, [ExperimentStatus::Concluded, ExperimentStatus::Archived], true))
                         ->onColor('success')
                         ->offColor('warning')
-                        ->updateStateUsing(function (Experiment $record, bool $state): bool {
-                            if (! ExperimentsTable::canEditRecord($record) || $record->status === ExperimentStatus::Concluded) {
-                                return $record->status === ExperimentStatus::Active;
-                            }
-
-                            $record->transitionTo($state ? ExperimentStatus::Active : ExperimentStatus::Paused)->save();
-
-                            return $state;
-                        }),
+                        ->updateStateUsing(fn (Experiment $record, bool $state): bool => app(SetExperimentRunning::class)->handle($record, $state)),
                 ])
                     ->alignCenter()
                     ->wrapHeader(),
@@ -101,10 +93,10 @@ class ExperimentsTable
                 BulkActionGroup::make([
                     BulkAction::make('deleteSelected')
                         ->label('Delete Selected')
-                        ->visible(fn (): bool => ExperimentHelpers::canDeleteAnyExperiment())
+                        ->visible(fn (): bool => ExperimentAccess::canDeleteAnyExperiment())
                         ->requiresConfirmation()
                         ->action(function (Collection $records): void {
-                            ExperimentsTable::deleteSelectedExperiments($records);
+                            app(DeleteSelectedExperiments::class)->handle($records);
                         }),
                 ]),
             ]);
@@ -166,12 +158,14 @@ class ExperimentsTable
 
     private static function findTrackedPropertyForExperiment(Experiment $record): ?TrackedProperty
     {
-        $query = OwnerUiScope::applyForRecordOwner(
-            TrackedProperty::query(),
-            $record,
-            recordConfigKey: 'growth.features.owner',
-            queryConfigKey: 'signals.owner',
-        );
+        $query = Experiment::ownerScopeConfig()->enabled
+            ? OwnerUiScope::applyForRecordOwner(
+                TrackedProperty::query(),
+                $record,
+                recordConfigKey: 'growth.features.owner',
+                queryConfigKey: 'signals.owner',
+            )
+            : OwnerUiScope::apply(TrackedProperty::query());
 
         $trackedProperty = $query
             ->whereKey($record->tracked_property_id)
@@ -217,7 +211,7 @@ class ExperimentsTable
 
     private static function canEditRecord(Experiment $record): bool
     {
-        return ExperimentHelpers::canMutateExperiment($record);
+        return ExperimentAccess::can('update', $record);
     }
 
     private static function statusOperationalDescription(ExperimentStatus $status): string
@@ -229,23 +223,5 @@ class ExperimentsTable
             ExperimentStatus::Concluded => 'Locked',
             ExperimentStatus::Archived => 'Archived',
         };
-    }
-
-    /**
-     * @param  Collection<int|string, Experiment>  $records
-     */
-    private static function deleteSelectedExperiments(Collection $records): void
-    {
-        DB::transaction(function () use ($records): void {
-            foreach ($records as $record) {
-                if (! $record instanceof Experiment || ! ExperimentHelpers::canMutateExperiment($record)) {
-                    throw new RuntimeException('Global growth experiments can only be deleted from explicit global context.');
-                }
-            }
-
-            foreach ($records as $record) {
-                $record->delete();
-            }
-        });
     }
 }

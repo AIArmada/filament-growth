@@ -6,6 +6,7 @@ return [
     /* Navigation */
     'navigation' => [
         'group' => 'Growth',
+        'settings_group' => 'Growth',
     ],
 
     /* Tables */

@@ -6,11 +6,12 @@ namespace AIArmada\FilamentGrowth\Resources;
 
 use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
 use AIArmada\CommerceSupport\Support\OwnerTuple\OwnerTupleColumns;
+use AIArmada\FilamentGrowth\Authorization\ExperimentAccess;
 use AIArmada\FilamentGrowth\Resources\ExperimentResource\Pages;
 use AIArmada\FilamentGrowth\Resources\ExperimentResource\Schemas\ExperimentForm;
 use AIArmada\FilamentGrowth\Resources\ExperimentResource\Tables\ExperimentsTable;
-use AIArmada\FilamentGrowth\Support\ExperimentHelpers;
 use AIArmada\Growth\Models\Experiment;
+use AIArmada\Growth\Queries\ExperimentOwnership;
 use AIArmada\Signals\Features\Ingestion\Models\TrackedProperty;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -19,7 +20,6 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Facades\Gate;
 use UnitEnum;
 
 final class ExperimentResource extends Resource
@@ -37,8 +37,8 @@ final class ExperimentResource extends Resource
     {
         $propertyColumns = OwnerTupleColumns::forModelClass(TrackedProperty::class);
 
-        return ExperimentHelpers::applyOwnerSafeRelationCounts(
-            ExperimentHelpers::scopeExperiments(Experiment::query()),
+        return ExperimentAccess::applyOwnerSafeRelationCounts(
+            ExperimentOwnership::scopeExperiments(Experiment::query()),
         )->with([
             'trackedProperty' => function ($query) use ($propertyColumns) {
                 $builder = $query instanceof Relation ? $query->getQuery() : $query;
@@ -77,40 +77,24 @@ final class ExperimentResource extends Resource
 
     public static function canCreate(): bool
     {
-        return parent::canCreate()
-            && ExperimentHelpers::canCreateExperiment();
+        return ExperimentAccess::can('create', Experiment::class);
     }
 
     public static function canEdit(Model $record): bool
     {
-        if (! $record instanceof Experiment) {
-            return false;
-        }
-
-        if (! parent::canEdit($record)) {
-            return false;
-        }
-
-        return ExperimentHelpers::canMutateExperiment($record);
+        return $record instanceof Experiment
+            && ExperimentAccess::can('update', $record);
     }
 
     public static function canDelete(Model $record): bool
     {
-        if (! $record instanceof Experiment) {
-            return false;
-        }
-
-        if (! parent::canDelete($record)) {
-            return false;
-        }
-
-        return ExperimentHelpers::canMutateExperiment($record);
+        return $record instanceof Experiment
+            && ExperimentAccess::can('delete', $record);
     }
 
     public static function canDeleteAny(): bool
     {
-        return parent::canDeleteAny()
-            && Gate::allows('deleteAny', static::getModel());
+        return ExperimentAccess::can('deleteAny', Experiment::class);
     }
 
     public static function getPages(): array
