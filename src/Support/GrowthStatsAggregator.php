@@ -46,9 +46,7 @@ final class GrowthStatsAggregator
         $totalExperiments = (int) ($experiments->first()?->getAttribute('total_experiments') ?? 0);
         $activeExperiments = (int) ($experiments->first()?->getAttribute('active_experiments') ?? 0);
         $aggregator = app(AggregateExperimentMetrics::class);
-        $batch = method_exists($aggregator, 'handleMany')
-            ? self::safeAggregateExperimentMetricsBatch($aggregator, $experiments)
-            : null;
+        $batch = self::safeAggregateExperimentMetricsBatch($aggregator, $experiments);
         $metricsByExperiment = $batch['results'] ?? [];
 
         $summary = $experiments->reduce(function (array $carry, Experiment $experiment) use ($metricsByExperiment): array {
