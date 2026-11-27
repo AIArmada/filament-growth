@@ -7,7 +7,7 @@ namespace AIArmada\FilamentGrowth\Policies;
 use AIArmada\CommerceSupport\Support\Filament\OwnerUiScope;
 use AIArmada\Growth\Models\Experiment;
 use AIArmada\Growth\Models\Variant;
-use AIArmada\Signals\Models\TrackedProperty;
+use AIArmada\Signals\Features\Ingestion\Models\TrackedProperty;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 
 final class VariantPolicy

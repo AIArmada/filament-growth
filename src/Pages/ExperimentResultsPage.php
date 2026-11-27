@@ -11,7 +11,7 @@ use AIArmada\FilamentGrowth\Resources\ExperimentResource;
 use AIArmada\Growth\Actions\AggregateExperimentMetrics;
 use AIArmada\Growth\Enums\ExperimentModuleType;
 use AIArmada\Growth\Models\Experiment;
-use AIArmada\Signals\Models\TrackedProperty;
+use AIArmada\Signals\Features\Ingestion\Models\TrackedProperty;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
